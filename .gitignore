@@ -1,0 +1,42 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Byte-compiled / optimized / DLL files
+*-cpython-*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# SWF cache and generated outputs (avoid committing large binary blobs)
+swf_cache/
+output_sacar_objetos/
+
+# Temporary extraction/import folders used by tools
+temp_extract/
+temp_trucar/
+
+# Fiddler backups
+*.backup
+
+# pytest cache
+.pytest_cache/
