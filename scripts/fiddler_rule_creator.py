@@ -949,14 +949,27 @@ class FiddlerRuleCreator:
     
     def close_mundo_gaturro(self):
         import subprocess, time
-        if self.is_process_running('MundoGaturro'):
+        # Try to locate processes related to Mundo Gaturro (MundoGaturro.exe or nw.exe instances
+        # that belong to the Mundo Gaturro installation) and terminate them by PID to avoid
+        # accidentally killing unrelated nw.exe processes.
+        procs = self.find_mundo_gaturro_processes()
+        if procs:
             self.mostrar_resultado_reglas("Closing Mundo Gaturro...")
             try:
-                subprocess.run(["taskkill", "/f", "/im", "MundoGaturro.exe"], capture_output=True)
+                for p in procs:
+                    try:
+                        subprocess.run(["taskkill", "/f", "/pid", str(p.pid)], capture_output=True)
+                    except Exception:
+                        pass
                 time.sleep(3)
-                if self.is_process_running('MundoGaturro'):
+                remaining = self.find_mundo_gaturro_processes()
+                if remaining:
                     self.mostrar_resultado_reglas("Forcing close...")
-                    subprocess.run(["taskkill", "/f", "/im", "MundoGaturro.exe"], capture_output=True)
+                    for p in remaining:
+                        try:
+                            subprocess.run(["taskkill", "/f", "/pid", str(p.pid)], capture_output=True)
+                        except Exception:
+                            pass
                     time.sleep(2)
                 self.mostrar_resultado_reglas("Mundo Gaturro closed")
                 return True
@@ -1007,14 +1020,36 @@ class FiddlerRuleCreator:
             return False
     
     def is_process_running(self, process_name):
+        # Backwards-compatible wrapper: return True if any Mundo Gaturro related process exists
+        return len(self.find_mundo_gaturro_processes()) > 0
+
+    def find_mundo_gaturro_processes(self):
+        """Return list of psutil.Process objects that likely belong to Mundo Gaturro.
+        This includes processes whose name contains 'MundoGaturro' and also `nw.exe`
+        instances whose executable path or command line mentions 'Mundo'/'Gaturro'/'gaturro'.
+        """
         import psutil
+        matches = []
         try:
-            for process in psutil.process_iter(['name']):
-                if process.info['name'] and process_name.lower() in process.info['name'].lower():
-                    return True
-            return False
-        except:
-            return False
+            for proc in psutil.process_iter(['pid', 'name', 'exe', 'cmdline']):
+                try:
+                    name = (proc.info.get('name') or '').lower()
+                    exe = (proc.info.get('exe') or '') or ''
+                    cmd = ' '.join(proc.info.get('cmdline') or []).lower()
+                    # Direct MundoGaturro executable
+                    if 'mundogaturro' in name or 'mundogaturro' in exe.lower() or 'mundogaturro' in cmd:
+                        matches.append(proc)
+                        continue
+                    # NW.js (nw.exe) or node wrapper: check path/args for hints
+                    if name in ('nw.exe', 'node.exe'):
+                        if 'mundo gaturro' in exe.lower() or 'mundo gaturro' in cmd or 'gaturro' in exe.lower() or 'gaturro' in cmd:
+                            matches.append(proc)
+                            continue
+                except Exception:
+                    continue
+        except Exception:
+            return []
+        return matches
     
     def mostrar_resultado_reglas(self, texto):
         self.ar_root.after(0, lambda: self.ar_results_text.insert('end', texto + "\n"))
@@ -1101,6 +1136,7 @@ class FiddlerRuleCreator:
     
     def open_mundo_gaturro_visual(self):
         import os, subprocess
+        # Try the new desktop installer location first (native exe)
         local_path = os.path.join(os.getenv('LOCALAPPDATA'), 'Programs', 'gaturro-desktop', 'MundoGaturro.exe')
         if os.path.exists(local_path):
             try:
@@ -1110,22 +1146,31 @@ class FiddlerRuleCreator:
             except Exception as e:
                 self.mostrar_resultado_reglas(f"Error opening Mundo Gaturro: {e}")
                 return False
-        else:
-            self.mostrar_resultado_reglas("MundoGaturro.exe not found in main path")
-            alternative_paths = [
-                r"C:\Program Files (x86)\MundoGaturro\MundoGaturro.exe",
-                r"C:\Program Files\MundoGaturro\MundoGaturro.exe",
-            ]
-            for path in alternative_paths:
-                if os.path.exists(path):
-                    try:
-                        subprocess.Popen([path])
-                        self.mostrar_resultado_reglas(f"Mundo Gaturro opened from: {path}")
-                        return True
-                    except Exception as e:
-                        self.mostrar_resultado_reglas(f"Error with alternative path {path}: {e}")
-            self.mostrar_resultado_reglas("Could not find MundoGaturro.exe")
-            return False
+
+        # Fallbacks: look for classic MundoGaturro.exe or NW.js (nw.exe) installation paths
+        self.mostrar_resultado_reglas("MundoGaturro.exe not found in main path")
+        alternative_paths = [
+            r"C:\Program Files (x86)\MundoGaturro\MundoGaturro.exe",
+            r"C:\Program Files\MundoGaturro\MundoGaturro.exe",
+            r"C:\Program Files (x86)\Mundo Gaturro\nw.exe",
+            r"C:\Program Files\Mundo Gaturro\nw.exe",
+        ]
+
+        # Also try nw.exe located inside the desktop install folder
+        possible_nw_in_local = os.path.join(os.getenv('LOCALAPPDATA'), 'Programs', 'gaturro-desktop', 'nw.exe')
+        alternative_paths.insert(0, possible_nw_in_local)
+
+        for path in alternative_paths:
+            if path and os.path.exists(path):
+                try:
+                    subprocess.Popen([path])
+                    self.mostrar_resultado_reglas(f"Mundo Gaturro opened from: {path}")
+                    return True
+                except Exception as e:
+                    self.mostrar_resultado_reglas(f"Error with alternative path {path}: {e}")
+
+        self.mostrar_resultado_reglas("Could not find MundoGaturro executable (MundoGaturro.exe or nw.exe)")
+        return False
 
 
 if __name__ == "__main__":
