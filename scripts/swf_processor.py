@@ -39,14 +39,22 @@ class SWFProcessor:
                             f.write(chunk)
                 size = os.path.getsize(local_file)
                 if size > 0:
-                    return str(local_file)
+                    return str(local_file), None
                 else:
                     os.remove(local_file)
-                    return None
+                    return None, f"Error: El archivo descargado está vacío (0 bytes)."
+            elif response.status_code == 404:
+                return None, f"Error 404: El SWF '{swf_name}' no fue encontrado en el servidor. Revisa el nombre."
+            elif response.status_code == 403:
+                return None, f"Error 403: Acceso denegado para el SWF '{swf_name}'."
             else:
-                return None
-        except Exception:
-            return None
+                return None, f"Error HTTP {response.status_code} al descargar '{swf_name}'."
+        except requests.exceptions.ConnectionError:
+            return None, "Error de red: No se pudo conectar al CDN de Mundo Gaturro."
+        except requests.exceptions.Timeout:
+            return None, "Error de red: Tiempo de espera agotado (Timeout)."
+        except Exception as e:
+            return None, f"Error inesperado al descargar: {str(e)}"
     def extract_classes(self, swf_file):
         if platform.system() == "Windows":
             ffdec_path = "ffdec/ffdec.bat"

@@ -235,9 +235,9 @@ class TrucarLauncher:
         swf_path = os.path.join("swf_cache", f"{swf_name}.swf")
         if not os.path.exists(swf_path):
             self.status_label.configure(text="Downloading SWF...", text_color=Style.TEXT_SECONDARY)
-            swf_path = self.swf_processor.download_swf(swf_name)
+            swf_path, error_msg = self.swf_processor.download_swf(swf_name)
             if not swf_path:
-                self.status_label.configure(text="Could not download SWF.", text_color=Style.TEXT_ERROR)
+                self.status_label.configure(text=error_msg or "Could not download SWF.", text_color=Style.TEXT_ERROR)
                 return
         
         self.status_label.configure(text="Extracting objects...", text_color=Style.TEXT_SECONDARY)
