@@ -6,27 +6,36 @@ setlocal
 set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
-REM Preferir pythonw (sin consola) y lanzarlo con start para desacoplar la ventana.
-where pythonw >nul 2>&1
-if %errorlevel%==0 (
-    start "" pythonw "%SCRIPT_DIR%run.py"
-    exit /b 0
-)
+echo Iniciando MG Tools...
+echo Si la ventana se cierra inmediatamente o el programa no abre,
+echo toma una foto de esta consola.
+echo.
 
-REM Si no hay pythonw, usar PowerShell Start-Process para lanzar python sin bloquear el .bat.
 where python >nul 2>&1
 if %errorlevel%==0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "Start-Process -FilePath 'python' -ArgumentList '\"%SCRIPT_DIR%run.py\"' -WorkingDirectory '%SCRIPT_DIR%'"
-    exit /b 0
+    python "%SCRIPT_DIR%run.py"
+    if %errorlevel% neq 0 (
+        echo.
+        echo [ERROR] El programa se cerro inesperadamente.
+        echo Por favor, saca una captura de pantalla de estos errores y enviasela al desarrollador.
+        pause
+    )
+    exit /b %errorlevel%
 )
 
-REM Finalmente intentar con py -3 (launcher)
 where py >nul 2>&1
 if %errorlevel%==0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "Start-Process -FilePath 'py' -ArgumentList '-3 \"%SCRIPT_DIR%run.py\"' -WorkingDirectory '%SCRIPT_DIR%'"
-    exit /b 0
+    py -3 "%SCRIPT_DIR%run.py"
+    if %errorlevel% neq 0 (
+        echo.
+        echo [ERROR] El programa se cerro inesperadamente.
+        echo Por favor, saca una captura de pantalla de estos errores y enviasela al desarrollador.
+        pause
+    )
+    exit /b %errorlevel%
 )
 
-echo Python no encontrado. Instale Python y agreguelo al PATH o use el lanzador py.
+echo [ERROR CRITICO] Python no encontrado.
+echo Debes instalar Python y agregarlo al PATH durante la instalacion o usar el lanzador py.
 pause
 exit /b 1

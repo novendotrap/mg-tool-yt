@@ -724,9 +724,9 @@ class FiddlerRuleCreator:
             return
         
         self.mostrar_resultado("Downloading SWF from CDN...")
-        swf_file = self.swf_processor.download_swf(swf_name)
+        swf_file, error_msg = self.swf_processor.download_swf(swf_name)
         if not swf_file:
-            self.mostrar_resultado("Error: Could not download SWF")
+            self.mostrar_resultado(error_msg or "Error: Could not download SWF")
             return
         
         self.mostrar_resultado(f"SWF downloaded: {Path(swf_file).name}")
