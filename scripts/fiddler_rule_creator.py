@@ -80,6 +80,7 @@ class FiddlerRuleCreator:
         self.config_manager = ConfigManager()
         self.fiddler_rules_path = self.get_fiddler_rules_path()
         self.swf_processor = SWFProcessor()
+        self.current_qty = 1
     
     def get_fiddler_rules_path(self):
         return os.path.join(self.config_manager.get_fiddler_path(), "AutoResponder.xml")
@@ -786,6 +787,7 @@ class FiddlerRuleCreator:
             return
 
         self.mostrar_resultado("Generating encode...")
+        self.current_qty = qty
         encode_content = self.swf_processor.generate_encode(self.current_objects, self.current_swf_name, qty=qty)
         
         if encode_content:
@@ -828,7 +830,8 @@ class FiddlerRuleCreator:
         safe_name = self.current_swf_name.replace("/", "_").replace("\\", "_")
         
         try:
-            encode_content = self.swf_processor.generate_encode(self.current_objects, self.current_swf_name)
+            qty = getattr(self, 'current_qty', 1)
+            encode_content = self.swf_processor.generate_encode(self.current_objects, self.current_swf_name, qty=qty)
             encode_base64 = base64.b64encode(encode_content.encode('utf-8')).decode('utf-8') if encode_content else ''
             
             exact_file = exacts_dir / f"{safe_name}_exact.txt"
