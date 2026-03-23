@@ -28,6 +28,7 @@ class ConfigManager:
     def get_defaults(self):
         return {
             "fiddler_path": str(Path.home() / "Documents" / "Fiddler2"),
+            "fiddler_executable_path": "fiddler",
             "mundo_gaturro_cache_path": str(Path(os.getenv('APPDATA')) / "MundoGaturro")
         }
 
@@ -36,6 +37,13 @@ class ConfigManager:
 
     def set_fiddler_path(self, path):
         self.config["fiddler_path"] = path
+        self.save_config()
+
+    def get_fiddler_executable_path(self):
+        return self.config.get("fiddler_executable_path", self.get_defaults()["fiddler_executable_path"])
+
+    def set_fiddler_executable_path(self, path):
+        self.config["fiddler_executable_path"] = path
         self.save_config()
 
     def get_mundo_gaturro_cache_path(self):

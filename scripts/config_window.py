@@ -41,7 +41,7 @@ class ConfigWindow:
         except Exception:
             pass
         self.root.title("Configuration - MG Tools")
-        self.root.geometry("500x400")
+        self.root.geometry("500x480")
         self.root.resizable(False, False)
         self.root.configure(fg_color=Style.BG_PRIMARY)
         
@@ -166,6 +166,43 @@ class ConfigWindow:
         )
         fiddler_btn.pack(side="right")
         
+        # Fiddler Executable Path
+        fiddler_exec_label = ctk.CTkLabel(
+            settings_frame,
+            text="Fiddler Executable (.exe):",
+            font=(Style.FONT_FAMILY, 13),
+            text_color=Style.TEXT_PRIMARY
+        )
+        fiddler_exec_label.pack(anchor="w", pady=(0, 8), padx=16)
+        
+        fiddler_exec_row = ctk.CTkFrame(settings_frame, fg_color=Style.BG_SECONDARY)
+        fiddler_exec_row.pack(fill="x", padx=16, pady=(0, 16))
+        
+        self.fiddler_exec_entry = ctk.CTkEntry(
+            fiddler_exec_row,
+            font=(Style.FONT_FAMILY, 11),
+            fg_color=Style.BG_TERTIARY,
+            border_color=Style.BORDER_MEDIUM,
+            text_color=Style.TEXT_PRIMARY,
+            height=36
+        )
+        self.fiddler_exec_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.fiddler_exec_entry.insert(0, self.config_manager.get_fiddler_executable_path())
+        
+        fiddler_exec_btn = ctk.CTkButton(
+            fiddler_exec_row,
+            text="Select",
+            font=(Style.FONT_FAMILY, 11),
+            fg_color=Style.BTN_SECONDARY,
+            text_color=Style.TEXT_PRIMARY,
+            corner_radius=6,
+            width=80,
+            height=36,
+            hover_color=adjust_brightness(Style.BTN_SECONDARY, 40),
+            command=self.select_fiddler_executable
+        )
+        fiddler_exec_btn.pack(side="right")
+        
         # Mundo Gaturro Cache Path
         mg_label = ctk.CTkLabel(
             settings_frame,
@@ -243,6 +280,15 @@ class ConfigWindow:
         if path:
             self.fiddler_entry.delete(0, ctk.END)
             self.fiddler_entry.insert(0, path)
+            
+    def select_fiddler_executable(self):
+        path = filedialog.askopenfilename(
+            title="Select Fiddler Executable",
+            filetypes=[("Executables", "*.exe"), ("All files", "*.*")]
+        )
+        if path:
+            self.fiddler_exec_entry.delete(0, ctk.END)
+            self.fiddler_exec_entry.insert(0, path)
     
     def select_mg_path(self):
         path = filedialog.askdirectory(title="Select Mundo Gaturro cache folder")
@@ -252,10 +298,15 @@ class ConfigWindow:
     
     def save_config(self):
         fiddler_path = self.fiddler_entry.get().strip()
+        fiddler_exec_path = self.fiddler_exec_entry.get().strip()
         mg_path = self.mg_entry.get().strip()
         
         if not fiddler_path:
             messagebox.showerror("Error", "Fiddler path cannot be empty.")
+            return
+            
+        if not fiddler_exec_path:
+            messagebox.showerror("Error", "Fiddler executable path cannot be empty.")
             return
         
         if not mg_path:
@@ -263,6 +314,7 @@ class ConfigWindow:
             return
         
         self.config_manager.set_fiddler_path(fiddler_path)
+        self.config_manager.set_fiddler_executable_path(fiddler_exec_path)
         self.config_manager.set_mundo_gaturro_cache_path(mg_path)
         
         messagebox.showinfo(
