@@ -1117,11 +1117,14 @@ class FiddlerRuleCreator:
         return existing_rules
     
     def restart_fiddler_visual(self):
-        import subprocess, platform, time
+        import subprocess, platform, time, os
         try:
             if platform.system() == "Windows":
+                fiddler_exec = self.config_manager.get_fiddler_executable_path()
+                fiddler_basename = os.path.basename(fiddler_exec) if fiddler_exec and fiddler_exec != "fiddler" else "fiddler.exe"
+                
                 self.mostrar_resultado_reglas("Closing Fiddler...")
-                result = subprocess.run(["taskkill", "/f", "/im", "fiddler.exe"], capture_output=True, text=True)
+                result = subprocess.run(["taskkill", "/f", "/im", fiddler_basename], capture_output=True, text=True)
                 if result.returncode == 0:
                     self.mostrar_resultado_reglas("Fiddler closed")
                 else:
@@ -1129,10 +1132,19 @@ class FiddlerRuleCreator:
                 
                 time.sleep(2)
                 self.mostrar_resultado_reglas("Opening Fiddler...")
-                subprocess.Popen(["fiddler"])
+                # Use shell=True if it's just 'fiddler' or run executable directly
+                if fiddler_exec == "fiddler":
+                    subprocess.Popen([fiddler_exec], shell=True)
+                else:
+                    subprocess.Popen([fiddler_exec])
                 time.sleep(3)
                 self.mostrar_resultado_reglas("Fiddler ready and running")
                 return True
+        except FileNotFoundError as e:
+            self.mostrar_resultado_reglas(f"Error restarting Fiddler: {e}")
+            self.mostrar_resultado_reglas("💡 TIP: Fiddler was not found in your system PATH.")
+            self.mostrar_resultado_reglas("Please go to 'Settings' and manually select your Fiddler Executable (.exe).")
+            return False
         except Exception as e:
             self.mostrar_resultado_reglas(f"Error restarting Fiddler: {e}")
             return False
