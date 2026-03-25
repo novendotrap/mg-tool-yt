@@ -1083,6 +1083,7 @@ class FiddlerRuleCreator:
                 shutil.copy2(self.fiddler_rules_path, backup_path)
                 self.mostrar_resultado_reglas(f"Backup created: {backup_path}")
             
+            os.makedirs(os.path.dirname(self.fiddler_rules_path), exist_ok=True)
             with open(self.fiddler_rules_path, 'w', encoding='utf-8') as f:
                 f.write(xml_content)
             
