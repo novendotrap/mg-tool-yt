@@ -56,6 +56,9 @@ class SWFProcessor:
         except Exception as e:
             return None, f"Error inesperado al descargar: {str(e)}"
     def extract_classes(self, swf_file):
+        if not shutil.which("java"):
+            return [], "Error: Java no está instalado o no está en el PATH. FFDec requiere Java."
+            
         if platform.system() == "Windows":
             ffdec_path = "ffdec/ffdec.bat"
             if not os.path.exists(ffdec_path):
@@ -73,7 +76,8 @@ class SWFProcessor:
             import subprocess
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=60)
             if result.returncode != 0:
-                return [], f"Error FFDec: {result.stderr}"
+                err_msg = result.stderr.strip() if result.stderr.strip() else result.stdout.strip()
+                return [], f"Error FFDec: {err_msg}"
         except subprocess.TimeoutExpired:
             return [], "Error: Timeout al extraer clases"
         except Exception as e:
