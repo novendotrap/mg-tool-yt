@@ -56,8 +56,17 @@ class SWFProcessor:
         except Exception as e:
             return None, f"Error inesperado al descargar: {str(e)}"
     def extract_classes(self, swf_file):
-        if not shutil.which("java"):
-            return [], "Error: Java no está instalado o no está en el PATH. FFDec requiere Java."
+        has_java = False
+        try:
+            import subprocess
+            j_res = subprocess.run(["java", "-version"], capture_output=True, text=True, timeout=5)
+            if j_res.returncode == 0 and ("version" in j_res.stderr.lower() or "version" in j_res.stdout.lower()):
+                has_java = True
+        except Exception:
+            pass
+            
+        if not has_java:
+            return [], "Error: Java no está instalado o redirige a la Windows Store. Instala Java JRE/JDK para usar FFDec."
             
         if platform.system() == "Windows":
             ffdec_path = "ffdec/ffdec.bat"
