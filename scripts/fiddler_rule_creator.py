@@ -879,7 +879,7 @@ class FiddlerRuleCreator:
         thread.start()
     
     def ejecutar_configuracion_completa(self):
-        self.execute_btn.configure(state='disabled', text="⏳ Executing...")
+        self.ar_root.after(0, lambda: self.execute_btn.configure(state='disabled', text="⏳ Executing..."))
         self.mostrar_resultado_reglas("🎮 STARTING COMPLETE CONFIGURATION...")
         self.mostrar_resultado_reglas("=" * 50)
         
@@ -1041,7 +1041,8 @@ class FiddlerRuleCreator:
                     cmd = ' '.join(proc.info.get('cmdline') or []).lower()
                     # Direct MundoGaturro executable
                     if 'mundogaturro' in name or 'mundogaturro' in exe.lower() or 'mundogaturro' in cmd:
-                        matches.append(proc)
+                        if 'python' not in name and 'py.exe' not in name and 'cmd.exe' not in name:
+                            matches.append(proc)
                         continue
                     # NW.js (nw.exe) or node wrapper: check path/args for hints
                     if name in ('nw.exe', 'node.exe'):
